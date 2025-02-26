@@ -14,6 +14,9 @@ app.use(express.json()); // Parses JSON request body
 app.use(cors()); // Enables Cross-Origin Resource Sharing
 app.use(morgan('dev')); // Logs HTTP requests
 
+
+app.use('/api/auth', require('./routes/authRoutes'));
+
 // Test route
 app.get('/', (req, res) => {
   res.send('API is running...');
