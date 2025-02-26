@@ -7,21 +7,30 @@ exports.authenticate = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    req.user = decoded; // Attach user details to the request
     next();
   } catch (error) {
-    res.status(403).json({ message: "Invalid Token" });
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Token has expired. Please log in again." });
+    } else if (error.name === "JsonWebTokenError") {
+      return res.status(403).json({ message: "Invalid Token" });
+    } else {
+      return res.status(500).json({ message: "Server Error", error: error.message });
+    }
   }
 };
 
 // Restricts access to admins only.
-
-
 exports.authorize = (roles = []) => {
   return (req, res, next) => {
+    if (!req.user || !req.user.role) {
+      return res.status(403).json({ message: "Forbidden: No Role Found" });
+    }
+    
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({ message: "Forbidden: Access Denied" });
     }
+    
     next();
   };
 };
