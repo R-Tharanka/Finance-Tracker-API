@@ -5,6 +5,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const mongoose = require('mongoose');
 
 const app = express();
 
@@ -17,6 +18,17 @@ app.use(morgan('dev')); // Logs HTTP requests
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
+
+
+app.get('/test-db', async (req, res) => {
+  try {
+      const dbStatus = mongoose.connection.readyState === 1 ? "Connected" : "Not Connected";
+      res.json({ database: dbStatus });
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+});
+
 
 // Export app instance
 module.exports = app;
