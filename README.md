@@ -21,7 +21,7 @@ A secure RESTful API for managing personal finances, tracking expenses, setting 
 ##  Dependencies  
 This project uses the following NPM packages:  
 
-### ** Main Dependencies (Required for Production)**
+### **Main Dependencies (Required for Production)**
 | Package          | Version | Description |
 |-----------------|---------|-------------|
 | `express`       | latest  | Web framework for Node.js |
@@ -32,7 +32,7 @@ This project uses the following NPM packages:
 | `jsonwebtoken`  | latest  | JWT-based authentication |
 | `bcryptjs`      | latest  | Secure password hashing |
 
-### ** Dev Dependencies (For Development & Testing)**
+### **Dev Dependencies (For Development & Testing)**
 | Package      | Version | Description |
 |-------------|---------|-------------|
 | `nodemon`   | latest  | Auto-restarts the server on file changes |
