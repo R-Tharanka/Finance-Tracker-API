@@ -17,6 +17,9 @@ app.use(morgan('dev')); // Logs HTTP requests
 
 app.use('/api/auth', require('./routes/authRoutes'));
 
+app.use('/api/transactions', require('./routes/transactionRoutes'));
+
+
 // Test route
 app.get('/', (req, res) => {
   res.send('API is running...');
