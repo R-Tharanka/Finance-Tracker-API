@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
 
+console.log("//... Authenticate middleware triggered!"); // for debugging
+
 // Checks if the request has a valid JWT
 exports.authenticate = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
@@ -7,21 +9,34 @@ exports.authenticate = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    console.log("//... Token verified:", decoded); // for debugging
+    req.user = decoded; // Attach user details to the request
     next();
   } catch (error) {
-    res.status(403).json({ message: "Invalid Token" });
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Token has expired. Please log in again." });
+    } else if (error.name === "JsonWebTokenError") {
+      return res.status(403).json({ message: "Invalid Token" });
+    } else {
+      return res.status(500).json({ message: "Server Error", error: error.message });
+    }
   }
 };
 
-// Restricts access to admins only.
 
+// Restricts access based on roles
 
 exports.authorize = (roles = []) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: "Forbidden: Access Denied" });
+    if (!req.user || !req.user.role) {
+      return res.status(403).json({ message: "Access Denied: No Role Found" });
     }
+    
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ message: `Forbidden: Requires one of these roles: ${roles.join(', ')}` });
+    }
+
     next();
   };
 };
+
