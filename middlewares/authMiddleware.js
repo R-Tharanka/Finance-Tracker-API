@@ -23,17 +23,20 @@ exports.authenticate = (req, res, next) => {
   }
 };
 
-// Restricts access to admins only.
+
+// Restricts access based on roles
+
 exports.authorize = (roles = []) => {
   return (req, res, next) => {
     if (!req.user || !req.user.role) {
-      return res.status(403).json({ message: "Forbidden: No Role Found" });
+      return res.status(403).json({ message: "Access Denied: No Role Found" });
     }
     
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: "Forbidden: Access Denied" });
+      return res.status(403).json({ message: `Forbidden: Requires one of these roles: ${roles.join(', ')}` });
     }
-    
+
     next();
   };
 };
+

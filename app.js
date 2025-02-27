@@ -14,12 +14,19 @@ app.use(express.json()); // Parses JSON request body
 app.use(cors()); // Enables Cross-Origin Resource Sharing
 app.use(morgan('dev')); // Logs HTTP requests
 
-// Routes
+
 app.use('/api/auth', require('./routes/authRoutes'));
 
 app.use('/api/transactions', require('./routes/transactionRoutes'));
 
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+
+app.use('/api/admin', require('./routes/adminRoutes')); 
+
+app.use('/api/categories', require('./routes/categoryRoutes'));
+
+app.use('/api/spending-limits', require('./routes/spendingLimitRoutes'));
+
 
 
 // Test route
