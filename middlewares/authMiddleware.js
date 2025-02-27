@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
 
+console.log("//... Authenticate middleware triggered!"); // for debugging
+
 // Checks if the request has a valid JWT
 exports.authenticate = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
@@ -7,6 +9,7 @@ exports.authenticate = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("//... Token verified:", decoded); // for debugging
     req.user = decoded; // Attach user details to the request
     next();
   } catch (error) {
