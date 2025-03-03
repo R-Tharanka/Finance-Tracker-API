@@ -21,11 +21,20 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
 
+////////////////////////////////////////////////////////////////////////////////////////
+
 // node-cron Scheduler (Runs Daily at Midnight)
 const cron = require('node-cron');
-const { checkRecurringTransactions } = require('./controllers/notificationController');
+const { checkRecurringTransactions, checkBudgetNotifications } = require('./controllers/notificationController');
 
-cron.schedule('0 0 * * *', () => { // '* * * * *' for every minutes 
+cron.schedule('* * * * *', () => { // '* * * * *' for every minutes 
   console.log("🔄 Checking for due or missed recurring transactions...");
   checkRecurringTransactions();
+});
+
+
+// Run budget notification checks daily at midnight
+cron.schedule('* * * * *', () => { 
+  console.log("🔄 Running daily budget check...");
+  checkBudgetNotifications();
 });

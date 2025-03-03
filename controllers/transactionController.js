@@ -1,6 +1,6 @@
 const Transaction = require('../models/Transaction');
-
 const AdminLog = require('../models/AdminLog'); //Ensure logging model is imported
+const { checkBudgetNotifications } = require('./notificationController');
 
 
 // Create a new transaction
@@ -23,9 +23,12 @@ exports.createTransaction = async (req, res) => {
       date,
       tags,
       recurring,
-      recurrencePattern,   
-      recurrenceEndDate 
+      recurrencePattern,
+      recurrenceEndDate
     });
+
+    // Run budget notification check **without delaying response**
+    checkBudgetNotifications(userId, category); // Do not use await here
 
     res.status(201).json({ message: "Transaction created successfully", transaction });
   } catch (error) {
