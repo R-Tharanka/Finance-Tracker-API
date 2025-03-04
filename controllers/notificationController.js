@@ -123,14 +123,14 @@ exports.checkRecurringTransactions = async () => {
       if (transaction.recurrenceEndDate) {
         const recurrenceEnd = new Date(transaction.recurrenceEndDate);
         recurrenceEnd.setHours(0, 0, 0, 0);
-        if (recurrenceEnd < today) {
-          continue; // Skip this transaction
-        }
+        if (recurrenceEnd < today) continue;
       }
 
       // Properly calculate `nextTransactionDate`
       let nextTransactionDate = new Date(transactionDate);
-      while (nextTransactionDate < today) { // Stop at today, NOT exceeding it
+      let lastTransactionDate = new Date(transactionDate);
+      while (nextTransactionDate < today) {
+        lastTransactionDate = new Date(nextTransactionDate); // Store last valid transaction date
         if (transaction.recurrencePattern === 'daily') {
           nextTransactionDate.setDate(nextTransactionDate.getDate() + 1);
         } else if (transaction.recurrencePattern === 'weekly') {
@@ -140,14 +140,16 @@ exports.checkRecurringTransactions = async () => {
         }
       }
 
-      // Notify users **BEFORE a transaction is due**
+      // Notify users BEFORE a transaction is due
       const reminderDate = new Date(nextTransactionDate);
-      reminderDate.setDate(reminderDate.getDate() - 1); // Reminder 1 day before
+      reminderDate.setDate(reminderDate.getDate() - 1);
+      reminderDate.setHours(0, 0, 0, 0); // Normalize time
 
       const existingUpcoming = await Notification.findOne({
         user: transaction.user,
         transaction: transaction._id,
-        type: 'upcoming'
+        type: 'upcoming',
+        createdAt: { $gte: today, $lt: new Date(today.getTime() + 86400000) }
       });
 
       if (reminderDate.getTime() === today.getTime() && !existingUpcoming) {
@@ -159,11 +161,12 @@ exports.checkRecurringTransactions = async () => {
         });
       }
 
-      // Notify users **ON the due date**
+      // Notify users ON the due date
       const existingDueToday = await Notification.findOne({
         user: transaction.user,
         transaction: transaction._id,
-        type: 'due_today'
+        type: 'due_today',
+        createdAt: { $gte: today, $lt: new Date(today.getTime() + 86400000) }
       });
 
       if (nextTransactionDate.getTime() === today.getTime() && !existingDueToday) {
@@ -175,15 +178,14 @@ exports.checkRecurringTransactions = async () => {
         });
       }
 
-      // Notify users **if they missed a transaction**
+      // Prevent duplicate "missed" notifications and only trigger when necessary
       const existingMissed = await Notification.findOne({
         user: transaction.user,
         transaction: transaction._id,
-        type: 'missed',
-        createdAt: { $lt: today } // Any past missed transactions
+        type: 'missed'
       });
 
-      if (transactionDate < today && !existingMissed) {
+      if (lastTransactionDate.getTime() === today.getTime() - 86400000 && !existingMissed) {
         await Notification.create({
           user: transaction.user,
           message: `You missed a recurring transaction (${transaction.category}).`,
@@ -196,10 +198,7 @@ exports.checkRecurringTransactions = async () => {
     // Delete notifications older than 30 days
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    await Notification.deleteMany({
-      createdAt: { $lt: thirtyDaysAgo }
-    });
+    await Notification.deleteMany({ createdAt: { $lt: thirtyDaysAgo } });
 
   } catch (error) {
     console.error("Error checking recurring transactions:", error.message);
