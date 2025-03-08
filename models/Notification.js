@@ -19,9 +19,9 @@ const notificationSchema = new mongoose.Schema({
   },
   type: { 
     type: String, 
-    enum: ['upcoming', 'missed','due_today', 'budget_warning', 'budget_exceeded'],
+    enum: ['upcoming', 'missed', 'due_today', 'budget_warning', 'budget_exceeded', 'budget_adjustment'],
     required: true 
-  },
+  },  
   budget: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Budget' 
