@@ -4,6 +4,7 @@ const Notification = require('../models/Notification');
 const Transaction = require('../models/Transaction');
 const mongoose = require('mongoose');
 
+
 // Function to check budget limits and send notifications
 exports.checkBudgetNotifications = async (userId = null, category = null) => {
   try {
@@ -87,6 +88,42 @@ exports.checkBudgetNotifications = async (userId = null, category = null) => {
           budget: budget._id
         });
       }
+
+      // --- Budget Adjustment Recommendations ---
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const existingRecentRecommendation = await Notification.findOne({
+        user: budget.user,
+        budget: budget._id,
+        type: 'budget_adjustment',
+        createdAt: { $gte: thirtyDaysAgo } // Only check recent notifications
+      });
+
+
+      const daysRemaining = Math.ceil((new Date(budget.endDate) - now) / (1000 * 60 * 60 * 24));
+
+      // If spending is consistently above 120%, suggest increasing the budget
+      if (percentageSpent >= 120 && !existingRecentRecommendation) {
+        console.log(`//...Budget Increase Recommendation Triggered: ${budget.category}`);
+        await Notification.create({
+          user: budget.user,
+          message: `Recommendation: Consider increasing your budget for "${budget.category}". Your spending is significantly exceeding the allocated budget.`,
+          type: 'budget_adjustment',
+          budget: budget._id
+        });
+      }
+
+      // If spending is below 50% near the end of the budget period, suggest decreasing the budget
+      if (percentageSpent < 50 && daysRemaining <= 5 && !existingRecentRecommendation) {
+        console.log(`//...Budget Decrease Recommendation Triggered: ${budget.category}`);
+        await Notification.create({
+          user: budget.user,
+          message: `Recommendation: Consider decreasing your budget for "${budget.category}". Your spending is much lower than expected.`,
+          type: 'budget_adjustment',
+          budget: budget._id
+        });
+      }
     }
 
     // Remove old notifications only if they are older than 30 days
@@ -103,6 +140,7 @@ exports.checkBudgetNotifications = async (userId = null, category = null) => {
     console.error("Error checking budget notifications:", error.message);
   }
 };
+
 
 // Check for upcoming or missed transactions and create notifications
 exports.checkRecurringTransactions = async () => {
@@ -204,7 +242,6 @@ exports.checkRecurringTransactions = async () => {
     console.error("Error checking recurring transactions:", error.message);
   }
 };
-
 
 
 // Get notifications for the logged-in user

@@ -34,7 +34,7 @@ cron.schedule('* * * * *', () => { // '* * * * *' for every minutes
 
 
 // Run budget notification checks daily at midnight
-cron.schedule('* * * * *', () => { 
+cron.schedule('* * * * *', () => { //0 0 * * * for midnight
   console.log("🔄 Running daily budget check...");
   checkBudgetNotifications();
 });
