@@ -29,6 +29,7 @@ app.use('/api/spending-limits', require('./routes/spendingLimitRoutes'));
 
 app.use('/api/budgets', require('./routes/budgetRoutes'));
 
+app.use("/api/reports", require('./routes/financialReports'));
 
 
 // Test route
