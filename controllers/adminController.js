@@ -61,8 +61,6 @@ exports.updateUserRole = async (req, res) => {
     }
   };
   
-  
-
 
 
 // Get financial summary for all users (Admin Only)
@@ -76,7 +74,7 @@ exports.getAdminReports = async (req, res) => {
     const totalExpenses = await Transaction.aggregate([
       { $match: { type: "expense" } },
       { $group: { _id: null, total: { $sum: "$amount" } } }
-    ]);
+    ]);c
 
     const categoryBreakdown = await Transaction.aggregate([
       { $match: { type: "expense" } },
