@@ -31,6 +31,9 @@ app.use('/api/budgets', require('./routes/budgetRoutes'));
 
 app.use("/api/reports", require('./routes/financialReports'));
 
+app.use("/api/goals", require("./routes/goalRoutes"));
+
+
 
 // Test route
 app.get('/', (req, res) => {
