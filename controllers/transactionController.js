@@ -1,6 +1,7 @@
 const Transaction = require('../models/Transaction');
 const AdminLog = require('../models/AdminLog'); //Ensure logging model is imported
 const { checkBudgetNotifications } = require('./notificationController');
+const { allocateSavings } = require('./savingsController');
 
 
 // Create a new transaction
@@ -29,6 +30,11 @@ exports.createTransaction = async (req, res) => {
 
     // Run budget notification check **without delaying response**
     checkBudgetNotifications(userId, category); // Do not use await here
+
+    // If the transaction is income, allocate savings automatically
+    if (transaction.type === "income") {
+      allocateSavings(transaction); // Do not use await to avoid blocking response time
+    }
 
     res.status(201).json({ message: "Transaction created successfully", transaction });
   } catch (error) {
