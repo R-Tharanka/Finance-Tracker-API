@@ -8,7 +8,7 @@ exports.getFinancialReport = async (req, res) => {
         const { role, id: userId } = req.user;
         const { startDate, endDate, category, tags } = req.query;
 
-        console.log("//...Fetching transactions for user:", userId);
+        console.log("//...Fetching transactions for user:", userId, "| Role:", role);
 
         // Default period: Last 30 days
         const start = startDate ? new Date(startDate) : new Date();
@@ -18,30 +18,40 @@ exports.getFinancialReport = async (req, res) => {
         const end = endDate ? new Date(endDate) : new Date();
         end.setHours(23, 59, 59, 999);
 
+        console.log("//...Date Range Applied | Start:", start.toISOString(), "| End:", end.toISOString());
+
         // Admins see all transactions; users see only their own transactions
         const filter = role === "admin" ? {} : { user: new mongoose.Types.ObjectId(userId) };
 
+        // Apply mandatory date filter
+        filter.date = { $gte: start, $lte: end };
+
         // Apply optional filters
         if (category) filter.category = category;
-        if (tags) filter.tags = { $in: tags.split(",") };
+        if (tags) filter.tags = { $elemMatch: { $in: tags.split(",") } };
+
+        console.log("//... Final Tags Filter:", JSON.stringify(filter.tags, null, 2));
 
         // Get total income
         const income = await Transaction.aggregate([
-            { $match: { ...filter, type: "income", date: { $gte: start, $lte: end } } },
+            { $match: { ...filter, type: "income" } },
             { $group: { _id: null, totalIncome: { $sum: "$amount" } } }
         ]);
+        console.log("//...Total Income:", income);
 
         // Get total expenses
         const expenses = await Transaction.aggregate([
-            { $match: { ...filter, type: "expense", date: { $gte: start, $lte: end } } },
+            { $match: { ...filter, type: "expense" } },
             { $group: { _id: null, totalExpenses: { $sum: "$amount" } } }
         ]);
+        console.log("//...Total Expenses:", expenses);
 
         // Get category breakdown
         const categoryBreakdown = await Transaction.aggregate([
-            { $match: { ...filter, type: "expense", date: { $gte: start, $lte: end } } },
+            { $match: { ...filter, type: "expense" } },
             { $group: { _id: "$category", total: { $sum: "$amount" } } }
         ]);
+        console.log("//...Category Breakdown:", categoryBreakdown);
 
         // Calculate savings (Income - Expenses)
         const totalIncome = income.length > 0 ? income[0].totalIncome : 0;
@@ -64,14 +74,19 @@ exports.getFinancialReport = async (req, res) => {
             summaryMessage = `Warning! You spent more than you earned by ${percentage.toFixed(2)}%.`;
         }
 
+        console.log("//...Summary:", summaryMessage);
+
         // Compare with previous period (last 30 days before this range)
         const previousStart = new Date(start);
         previousStart.setDate(previousStart.getDate() - 30);
+
+        console.log("//...Previous Period Start:", previousStart);
 
         const previousExpenses = await Transaction.aggregate([
             { $match: { ...filter, type: "expense", date: { $gte: previousStart, $lt: start } } },
             { $group: { _id: null, totalPrevExpenses: { $sum: "$amount" } } }
         ]);
+        console.log("//...Previous Period Expenses:", previousExpenses);
 
         const prevTotalExpenses = previousExpenses.length > 0 ? previousExpenses[0].totalPrevExpenses : 0;
 
@@ -89,6 +104,8 @@ exports.getFinancialReport = async (req, res) => {
             trendMessage = `Your spending decreased by ${percentage.toFixed(2)}% compared to the last period.`;
         }
 
+        console.log("//...Trend:", trendMessage);
+
         // Additional Admin Insights
         let adminInsights = null;
         if (role === "admin") {
@@ -104,6 +121,8 @@ exports.getFinancialReport = async (req, res) => {
                 totalUsers,
                 topCategories
             };
+
+            console.log("//...Admin Insights:", adminInsights);
         }
 
         // Return the final response
@@ -118,7 +137,7 @@ exports.getFinancialReport = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Error fetching financial report:", error);
+        console.error("❌ Error fetching financial report:", error);
         res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
