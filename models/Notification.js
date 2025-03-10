@@ -1,11 +1,11 @@
-// notification model for transactions
+// notification model for transactions, budgets, and goals
 
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const notificationSchema = new mongoose.Schema({
   user: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
+    ref: "User", 
     required: true 
   },
   message: { 
@@ -14,17 +14,23 @@ const notificationSchema = new mongoose.Schema({
   },
   transaction: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Transaction', 
+    ref: "Transaction", 
     required: false 
   },
   type: { 
     type: String, 
-    enum: ['upcoming', 'missed', 'due_today', 'budget_warning', 'budget_exceeded', 'budget_adjustment'],
+    enum: ["upcoming", "missed", "due_today", "budget_warning", "budget_exceeded", "budget_adjustment", "goal_milestone"],
     required: true 
   },  
   budget: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Budget' 
+    ref: "Budget",
+    required: false
+  },
+  goal: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: "Goal",
+    required: false
   },
   isRead: { 
     type: Boolean, 
@@ -36,4 +42,4 @@ const notificationSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model('Notification', notificationSchema);
+module.exports = mongoose.model("Notification", notificationSchema);

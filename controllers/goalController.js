@@ -3,19 +3,24 @@ const Goal = require("../models/Goal");
 // Create a new goal
 exports.createGoal = async (req, res) => {
   try {
-    const { name, targetAmount, deadline, notes } = req.body;
+    const { name, targetAmount, deadline, notes, autoAllocation, allocationPercentage, allocationAmount } = req.body;
     const userId = req.user.id;
 
     if (!name || !targetAmount || !deadline) {
       return res.status(400).json({ message: "Name, target amount, and deadline are required." });
     }
 
+    console.log("Received Goal Data:", req.body); // Debugging log to verify request data
+
     const goal = await Goal.create({
       user: userId,
       name,
       targetAmount,
       deadline: new Date(deadline),
-      notes
+      notes,
+      autoAllocation: autoAllocation === true || autoAllocation === "true", // Ensure correct boolean value
+      allocationPercentage: allocationPercentage || 0,
+      allocationAmount: allocationAmount || 0
     });
 
     res.status(201).json({ message: "Goal created successfully", goal });
@@ -23,6 +28,7 @@ exports.createGoal = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
 
 // Get all goals for the logged-in user
 exports.getGoals = async (req, res) => {

@@ -1,5 +1,5 @@
 const Transaction = require('../models/Transaction');
-const AdminLog = require('../models/AdminLog'); //Ensure logging model is imported
+const AdminLog = require('../models/AdminLog');
 const { checkBudgetNotifications } = require('./notificationController');
 const { allocateSavings } = require('./savingsController');
 
