@@ -27,14 +27,14 @@ app.listen(PORT, () => {
 const cron = require('node-cron');
 const { checkRecurringTransactions, checkBudgetNotifications } = require('./controllers/notificationController');
 
-cron.schedule('* * * * *', () => { // '* * * * *' for every minutes 
+cron.schedule('0 0 * * *', () => { // '* * * * *' for every minutes 
   console.log("🔄 Checking for due or missed recurring transactions...");
   checkRecurringTransactions();
 });
 
 
 // Run budget notification checks daily at midnight
-cron.schedule('* * * * *', () => { //0 0 * * * for midnight
+cron.schedule('0 0 * * *', () => { //0 0 * * * for midnight
   console.log("🔄 Running daily budget check...");
   checkBudgetNotifications();
 });
