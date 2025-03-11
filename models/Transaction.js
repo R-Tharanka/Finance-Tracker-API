@@ -4,7 +4,8 @@ const transactionSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
   amount: {
     type: Number,
@@ -26,11 +27,13 @@ const transactionSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: ['income', 'expense'],
-    required: true
+    required: true, 
+    index: true
   },
   category: {
     type: String,
-    required: true
+    required: true, 
+    index: true
   },
   description: {
     type: String
@@ -38,13 +41,20 @@ const transactionSchema = new mongoose.Schema({
   date: {
     type: Date,
     required: true,
-    default: Date.now
+    default: Date.now, 
+    index: true
   },
   tags: [String],
   // Fields for recurring transactions:
-  recurring: { type: Boolean, default: false },
+  recurring: { type: Boolean, default: false, index: true },
   recurrencePattern: { type: String },
   recurrenceEndDate: { type: Date }  // Optional: to specify when the recurring transaction ends
 }, { timestamps: true });
+
+// Compound index: Optimize queries that sort/filter by user and date
+transactionSchema.index({ user: 1, date: -1 });
+
+// Optimized searching by type and category
+transactionSchema.index({ type: 1, category: 1 });
 
 module.exports = mongoose.model('Transaction', transactionSchema);

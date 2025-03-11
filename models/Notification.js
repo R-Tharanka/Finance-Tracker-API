@@ -6,7 +6,8 @@ const notificationSchema = new mongoose.Schema({
   user: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: "User", 
-    required: true 
+    required: true, 
+    index: true 
   },
   message: { 
     type: String, 
@@ -20,7 +21,8 @@ const notificationSchema = new mongoose.Schema({
   type: { 
     type: String, 
     enum: ["upcoming", "missed", "due_today", "budget_warning", "budget_exceeded", "budget_adjustment", "goal_milestone"],
-    required: true 
+    required: true, 
+    index: true  
   },  
   budget: { 
     type: mongoose.Schema.Types.ObjectId, 
@@ -41,5 +43,8 @@ const notificationSchema = new mongoose.Schema({
     default: Date.now 
   }
 });
+
+notificationSchema.index({ user: 1, isRead: 1, createdAt: -1 }); // Fetch unread notifications fast
+
 
 module.exports = mongoose.model("Notification", notificationSchema);

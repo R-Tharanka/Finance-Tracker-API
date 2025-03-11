@@ -4,7 +4,8 @@ const goalSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: true, 
+        index: true
     },
     name: {
         type: String,
@@ -20,7 +21,8 @@ const goalSchema = new mongoose.Schema({
     },
     deadline: {
         type: Date,
-        required: true
+        required: true, 
+        index: true
     },
     notes: {
         type: String
@@ -30,5 +32,7 @@ const goalSchema = new mongoose.Schema({
     allocationAmount: { type: Number, default: 0 }, // Fixed amount to allocate
 
 }, { timestamps: true });
+
+goalSchema.index({ user: 1, deadline: 1 }); // Optimized for user-goal lookups
 
 module.exports = mongoose.model("Goal", goalSchema);

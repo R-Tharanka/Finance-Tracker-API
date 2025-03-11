@@ -3,11 +3,14 @@ const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true, index: true }, // Index for quick lookups
   password: { type: String, required: true },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' }, // Role-based access
+  role: { type: String, enum: ['user', 'admin'], default: 'user', index: true }, // Role-based filtering
   preferredCurrency: { type: String, default: "USD" }, // Default currency for reports
 }, { timestamps: true });
+
+userSchema.index({ email: 1 }); // Ensures efficient queries by email
+userSchema.index({ role: 1 }); // Optimizes admin/user queries
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {

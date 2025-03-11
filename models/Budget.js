@@ -4,11 +4,13 @@ const budgetSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true, 
+    index: true
   },
   category: {
     type: String,
-    required: false // optional for general budgets
+    required: false, // optional for general budgets
+    index: true
   },
   amount: {
     type: Number,
@@ -26,8 +28,12 @@ const budgetSchema = new mongoose.Schema({
   },
   endDate: {
     type: Date,
-    required: true
+    required: true, 
+    index: true
   }
 }, { timestamps: true });
+
+budgetSchema.index({ user: 1, category: 1, endDate: 1 }); // Faster lookup of active budgets
+
 
 module.exports = mongoose.model('Budget', budgetSchema);
