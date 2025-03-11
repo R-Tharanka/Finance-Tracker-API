@@ -62,6 +62,6 @@ The API is documented via a Postman collection included in the repository. (See 
 
 # Acknowledgements
 
-This project was developed as part of the AF Assignment 01 for the BSc (Hons) in Information Technology at SLIIT.
+This project was developed based on the AF Assignment for the BSc (Hons) in Information Technology at SLIIT.
 
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/xIbq4TFL)
