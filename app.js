@@ -46,14 +46,33 @@ app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
-app.get('/test-db', async (req, res) => {
+app.get('/test-db', async (req, res, next) => {
   try {
       const dbStatus = mongoose.connection.readyState === 1 ? "Connected" : "Not Connected";
       res.json({ database: dbStatus });
   } catch (error) {
-      res.status(500).json({ error: error.message });
+      next(error); // Pass error to global error handler
   }
 });
+
+
+// 404 Handler (Catch unhandled routes)
+app.use((req, res, next) => {
+  const error = new Error(`Not Found - ${req.originalUrl}`);
+  error.status = 404;
+  next(error);
+});
+
+// Centralized Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack); // Logs error details to the console
+
+  res.status(err.status || 500).json({
+    message: err.message || "Internal Server Error",
+    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack, // Hide stack trace in production
+  });
+});
+
 
 const listEndpoints = require('express-list-endpoints');
 console.log("//...Registered Routes:", listEndpoints(app));
