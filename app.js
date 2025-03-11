@@ -35,13 +35,13 @@ app.use("/api/goals", require("./routes/goalRoutes"));
 
 app.use("/api/users", require("./routes/userRoutes"));
 
+app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 
 
 // Test route
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
-
 
 app.get('/test-db', async (req, res) => {
   try {
