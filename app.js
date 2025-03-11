@@ -6,6 +6,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
+const mongoSanitize = require('express-mongo-sanitize');
 
 const app = express();
 
@@ -13,6 +14,8 @@ const app = express();
 app.use(express.json()); // Parses JSON request body
 app.use(cors()); // Enables Cross-Origin Resource Sharing
 app.use(morgan('dev')); // Logs HTTP requests
+app.use(mongoSanitize()); //Prevent NoSQL injection
+
 
 // routs
 app.use('/api/auth', require('./routes/authRoutes'));
