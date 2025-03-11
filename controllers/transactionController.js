@@ -2,22 +2,35 @@ const Transaction = require('../models/Transaction');
 const AdminLog = require('../models/AdminLog');
 const { checkBudgetNotifications } = require('./notificationController');
 const { allocateSavings } = require('./savingsController');
+const { convertCurrency } = require("../utils/currencyConverter");
 
-
-// Create a new transaction
+// Create a new transaction with multi‐currency support
 exports.createTransaction = async (req, res) => {
   try {
     const userId = req.user.id; // Always use req.user.id from authentication middleware
 
+    // Destructure required fields from the request body
     const { amount, type, category, description, date, tags, recurring, recurrencePattern, recurrenceEndDate } = req.body;
+    
+    // Also read currency – default to "USD" if not provided
+    const currency = req.body.currency || "USD";
 
     if (!amount || !type || !category) {
       return res.status(400).json({ message: "Amount, type, and category are required." });
     }
 
+    // Convert the entered amount from the given currency to our base currency (USD)
+    // (convertCurrency returns an object with the converted amount and the exchange rate)
+    const { convertedAmount, exchangeRate } = await convertCurrency(amount, currency, "USD");
+
+    // Create the transaction record – note we store both the original amount (with its currency) 
+    // and the convertedAmount (with exchangeRate) for reporting.
     const transaction = await Transaction.create({
       user: userId,
       amount,
+      currency,
+      convertedAmount,
+      exchangeRate,
       type,
       category,
       description,
@@ -28,12 +41,12 @@ exports.createTransaction = async (req, res) => {
       recurrenceEndDate
     });
 
-    // Run budget notification check **without delaying response**
+    // Run budget notification check without delaying the response
     checkBudgetNotifications(userId, category); // Do not use await here
 
     // If the transaction is income, allocate savings automatically
     if (transaction.type === "income") {
-      allocateSavings(transaction); // Do not use await to avoid blocking response time
+      allocateSavings(transaction); // Do not await here to avoid blocking response time
     }
 
     res.status(201).json({ message: "Transaction created successfully", transaction });
@@ -41,6 +54,7 @@ exports.createTransaction = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
 
 // Get transactions for the authenticated user (Admins can see all)
 exports.getTransactions = async (req, res) => {

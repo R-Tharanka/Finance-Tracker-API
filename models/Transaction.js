@@ -10,6 +10,19 @@ const transactionSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  currency: {
+    type: String,
+    required: true,
+    default: "USD", // Default currency
+  },
+  convertedAmount: {
+    type: Number, // Amount in base currency
+    required: true,
+  },
+  exchangeRate: {
+    type: Number, // Exchange rate used for conversion
+    required: true,
+  },
   type: {
     type: String,
     enum: ['income', 'expense'],

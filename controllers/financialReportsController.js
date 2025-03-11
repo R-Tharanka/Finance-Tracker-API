@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
 const Transaction = require("../models/Transaction");
-const User = require("../models/User"); // Required for Admin reports
+const User = require("../models/User");
+const { convertCurrency } = require("../utils/currencyConverter");
 
-// Function to fetch financial reports
+// Function to fetch financial reports with multi‐currency support
 exports.getFinancialReport = async (req, res) => {
     try {
         const { role, id: userId } = req.user;
@@ -20,7 +21,7 @@ exports.getFinancialReport = async (req, res) => {
 
         console.log("//...Date Range Applied | Start:", start.toISOString(), "| End:", end.toISOString());
 
-        // Admins see all transactions; users see only their own transactions
+        // Admins see all transactions; regular users see only their own
         const filter = role === "admin" ? {} : { user: new mongoose.Types.ObjectId(userId) };
 
         // Apply mandatory date filter
@@ -30,114 +31,140 @@ exports.getFinancialReport = async (req, res) => {
         if (category) filter.category = category;
         if (tags) filter.tags = { $elemMatch: { $in: tags.split(",") } };
 
-        console.log("//... Final Tags Filter:", JSON.stringify(filter.tags, null, 2));
+        console.log("//...Final Tags Filter:", JSON.stringify(filter.tags, null, 2));
 
-        // Get total income
+        // IMPORTANT: We assume that transactions were created in the base currency (USD).
+        // In the aggregation we use an $ifNull operator so that if "convertedAmount" is missing, we use "amount".
         const income = await Transaction.aggregate([
             { $match: { ...filter, type: "income" } },
-            { $group: { _id: null, totalIncome: { $sum: "$amount" } } }
+            { $group: { 
+                _id: null, 
+                totalIncome: { $sum: { $ifNull: ["$convertedAmount", "$amount"] } } 
+            } }
         ]);
         console.log("//...Total Income:", income);
 
-        // Get total expenses
         const expenses = await Transaction.aggregate([
             { $match: { ...filter, type: "expense" } },
-            { $group: { _id: null, totalExpenses: { $sum: "$amount" } } }
+            { $group: { 
+                _id: null, 
+                totalExpenses: { $sum: { $ifNull: ["$convertedAmount", "$amount"] } } 
+            } }
         ]);
         console.log("//...Total Expenses:", expenses);
 
-        // Get category breakdown
         const categoryBreakdown = await Transaction.aggregate([
             { $match: { ...filter, type: "expense" } },
-            { $group: { _id: "$category", total: { $sum: "$amount" } } }
+            { $group: { 
+                _id: "$category", 
+                total: { $sum: { $ifNull: ["$convertedAmount", "$amount"] } } 
+            } }
         ]);
         console.log("//...Category Breakdown:", categoryBreakdown);
 
-        // Calculate savings (Income - Expenses)
-        const totalIncome = income.length > 0 ? income[0].totalIncome : 0;
-        const totalExpenses = expenses.length > 0 ? expenses[0].totalExpenses : 0;
-        const savings = totalIncome - totalExpenses;
+        // Calculate savings in base currency (USD)
+        const totalIncomeUSD = income.length > 0 ? income[0].totalIncome : 0;
+        const totalExpensesUSD = expenses.length > 0 ? expenses[0].totalExpenses : 0;
+        const savingsUSD = totalIncomeUSD - totalExpensesUSD;
 
-        // Prevent extreme percentage warnings
-        let summaryMessage;
-        if (totalIncome === 0) {
-            summaryMessage = totalExpenses > 0
-                ? "You have no income recorded, but you spent money. Consider reviewing your budget."
-                : "No transactions recorded in this period.";
-        } else if (totalIncome > totalExpenses) {
-            const percentage = ((totalIncome - totalExpenses) / totalIncome) * 100;
-            summaryMessage = `Great job! Your income exceeded expenses by ${percentage.toFixed(2)}%.`;
-        } else {
-            const percentage = totalIncome > 0
-                ? ((totalExpenses - totalIncome) / totalIncome) * 100
-                : 100; // If no income, assume expenses exceeded 100%
-            summaryMessage = `Warning! You spent more than you earned by ${percentage.toFixed(2)}%.`;
+        // Now, if the user has a preferred currency different from USD, convert the final totals.
+        const user = await User.findById(userId);
+        const preferredCurrency = user.preferredCurrency || "USD";
+
+        let conversionRate = 1;
+        if (preferredCurrency !== "USD") {
+            // Get conversion rate from USD to the preferred currency.
+            const conversionResult = await convertCurrency(1, "USD", preferredCurrency);
+            conversionRate = conversionResult.exchangeRate;
         }
 
+        // Convert aggregated values using the conversion rate.
+        const totalIncomeFinal = totalIncomeUSD * conversionRate;
+        const totalExpensesFinal = totalExpensesUSD * conversionRate;
+        const savingsFinal = savingsUSD * conversionRate;
+        const categoryBreakdownFinal = categoryBreakdown.map(item => ({
+            _id: item._id,
+            total: item.total * conversionRate
+        }));
+
+        // Build summary messages
+        let summaryMessage;
+        if (totalIncomeFinal === 0) {
+            summaryMessage = totalExpensesFinal > 0
+                ? "You have no income recorded, but you spent money. Consider reviewing your budget."
+                : "No transactions recorded in this period.";
+        } else if (totalIncomeFinal > totalExpensesFinal) {
+            const percentage = ((totalIncomeFinal - totalExpensesFinal) / totalIncomeFinal) * 100;
+            summaryMessage = `Great job! Your income exceeded expenses by ${percentage.toFixed(2)}%.`;
+        } else {
+            const percentage = totalIncomeFinal > 0
+                ? ((totalExpensesFinal - totalIncomeFinal) / totalIncomeFinal) * 100
+                : 100;
+            summaryMessage = `Warning! You spent more than you earned by ${percentage.toFixed(2)}%.`;
+        }
         console.log("//...Summary:", summaryMessage);
 
         // Compare with previous period (last 30 days before this range)
         const previousStart = new Date(start);
         previousStart.setDate(previousStart.getDate() - 30);
-
         console.log("//...Previous Period Start:", previousStart);
 
         const previousExpenses = await Transaction.aggregate([
             { $match: { ...filter, type: "expense", date: { $gte: previousStart, $lt: start } } },
-            { $group: { _id: null, totalPrevExpenses: { $sum: "$amount" } } }
+            { $group: { _id: null, totalPrevExpenses: { $sum: { $ifNull: ["$convertedAmount", "$amount"] } } } }
         ]);
         console.log("//...Previous Period Expenses:", previousExpenses);
 
-        const prevTotalExpenses = previousExpenses.length > 0 ? previousExpenses[0].totalPrevExpenses : 0;
+        const prevTotalExpensesUSD = previousExpenses.length > 0 ? previousExpenses[0].totalPrevExpenses : 0;
+        const prevTotalExpensesFinal = prevTotalExpensesUSD * conversionRate;
 
-        // Fix trend calculations when previous expenses are 0
         let trendMessage;
-        if (prevTotalExpenses === 0) {
-            trendMessage = totalExpenses > 0
+        if (prevTotalExpensesFinal === 0) {
+            trendMessage = totalExpensesFinal > 0
                 ? "This is your first time spending in this category."
                 : "No spending recorded in this period.";
-        } else if (totalExpenses > prevTotalExpenses) {
-            const percentage = ((totalExpenses - prevTotalExpenses) / prevTotalExpenses) * 100;
+        } else if (totalExpensesFinal > prevTotalExpensesFinal) {
+            const percentage = ((totalExpensesFinal - prevTotalExpensesFinal) / prevTotalExpensesFinal) * 100;
             trendMessage = `Your spending increased by ${percentage.toFixed(2)}% compared to the last period.`;
         } else {
-            const percentage = ((prevTotalExpenses - totalExpenses) / prevTotalExpenses) * 100;
+            const percentage = ((prevTotalExpensesFinal - totalExpensesFinal) / prevTotalExpensesFinal) * 100;
             trendMessage = `Your spending decreased by ${percentage.toFixed(2)}% compared to the last period.`;
         }
-
         console.log("//...Trend:", trendMessage);
 
-        // Additional Admin Insights
+        // Additional Admin Insights (only for admins)
         let adminInsights = null;
         if (role === "admin") {
             const totalUsers = await User.countDocuments();
             const topCategories = await Transaction.aggregate([
                 { $match: { type: "expense", date: { $gte: start, $lte: end } } },
-                { $group: { _id: "$category", total: { $sum: "$amount" } } },
+                { $group: { _id: "$category", total: { $sum: { $ifNull: ["$convertedAmount", "$amount"] } } } },
                 { $sort: { total: -1 } },
                 { $limit: 5 }
             ]);
-
             adminInsights = {
                 totalUsers,
-                topCategories
+                topCategories: topCategories.map(item => ({
+                    _id: item._id,
+                    total: item.total * conversionRate
+                }))
             };
-
             console.log("//...Admin Insights:", adminInsights);
         }
 
         // Return the final response
         res.json({
-            totalIncome,
-            totalExpenses,
-            savings,
-            categoryBreakdown,
+            totalIncome: totalIncomeFinal,
+            totalExpenses: totalExpensesFinal,
+            savings: savingsFinal,
+            categoryBreakdown: categoryBreakdownFinal,
             summary: summaryMessage,
             trend: trendMessage,
-            adminInsights // Only included for admins
+            adminInsights
         });
 
     } catch (error) {
-        console.error("❌ Error fetching financial report:", error);
+        console.error("Error fetching financial report:", error);
         res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
