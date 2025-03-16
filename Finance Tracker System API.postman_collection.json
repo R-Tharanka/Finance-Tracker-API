@@ -7,7 +7,7 @@
 	},
 	"item": [
 		{
-			"name": "http://localhost:5000/api/auth/login",
+			"name": "Login User",
 			"request": {
 				"auth": {
 					"type": "noauth"
@@ -41,18 +41,47 @@
 						"auth",
 						"login"
 					]
-				}
+				},
+				"description": "Authenticate user and generate JWT token"
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK - Successful Login",
+					"originalRequest": {},
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIs...\",\n  \"message\": \"Login successful\"\n}"
+				},
+				{
+					"name": "401 Unauthorized - Invalid Credentials",
+					"originalRequest": {},
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"message\": \"Invalid email or password\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"originalRequest": {},
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"message\": \"Server error, try again later\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/auth/register",
+			"name": "Register User",
 			"request": {
 				"auth": {
 					"type": "noauth"
 				},
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "raw",
 					"raw": "{\r\n  \"name\": \"qwe de\",\r\n  \"email\": \"qwe@sliit.com\",\r\n  \"password\": \"jxxjd#1e\",\r\n  \"role\": \"user\"\r\n}\r\n",
@@ -74,15 +103,45 @@
 						"auth",
 						"register"
 					]
-				}
+				},
+				"description": "Register a new user with name, email, password, and role."
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "201 Created - User Registered",
+					"originalRequest": {},
+					"status": "Created",
+					"code": 201,
+					"body": "{\n  \"message\": \"User registered successfully\",\n  \"token\": \"eyJhbGciOiJIUzI1Ni...\"\n}"
+				},
+				{
+					"name": "400 Bad Request - User Already Exists",
+					"originalRequest": {},
+					"status": "Bad Request",
+					"code": 400,
+					"body": "{\n  \"message\": \"User already exists\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"originalRequest": {},
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"message\": \"Server error, try again later\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/admin/users",
+			"name": "Get All Users",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{admin_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "GET",
 				"header": [],
@@ -98,20 +157,49 @@
 						"admin",
 						"users"
 					]
-				}
+				},
+				"description": "Retrieve a list of all users (admin only)"
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK - Users Fetched",
+					"originalRequest": {},
+					"status": "OK",
+					"code": 200,
+					"body": "[\n  {\n    \"_id\": \"1\",\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"role\": \"user\"\n  },\n  {\n    \"_id\": \"2\",\n    \"name\": \"Admin User\",\n    \"email\": \"admin@example.com\",\n    \"role\": \"admin\"\n  }\n]"
+				},
+				{
+					"name": "403 Forbidden - Admin Only",
+					"originalRequest": {},
+					"status": "Forbidden",
+					"code": 403,
+					"body": "{\n  \"message\": \"Access Denied: Admin Only\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"originalRequest": {},
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"message\": \"Server Error, Try Again Later\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/admin/users/:id",
+			"name": "Delete User by ID",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{admin_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "DELETE",
-				"header": [],
 				"url": {
-					"raw": "http://localhost:5000/api/admin/users/:id",
+					"raw": "http://localhost:5000/api/admin/users/67c073f08895df1b3e633dc1",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -121,23 +209,50 @@
 						"api",
 						"admin",
 						"users",
-						":id"
-					],
-					"variable": [
-						{
-							"key": "id",
-							"value": ""
-						}
+						"67c073f08895df1b3e633dc1"
 					]
-				}
+				},
+				"description": "Delete a user by ID (admin only)"
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK - User Deleted",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"message\": \"User deleted successfully\"\n}"
+				},
+				{
+					"name": "403 Forbidden - Admin Only",
+					"status": "Forbidden",
+					"code": 403,
+					"body": "{\n  \"message\": \"Access Denied: Admin Only\"\n}"
+				},
+				{
+					"name": "404 Not Found - Invalid User ID",
+					"status": "Not Found",
+					"code": 404,
+					"body": "{\n  \"message\": \"User not found\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"message\": \"Server Error, Try Again Later\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/admin/reports",
+			"name": "Admin Financial Reports",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{admin_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "GET",
 				"header": [],
@@ -153,20 +268,56 @@
 						"admin",
 						"reports"
 					]
-				}
+				},
+				"description": "Retrieve financial reports (Admin only)"
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK - Reports Fetched",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"income\": 5000,\n  \"expenses\": 3000,\n  \"profit\": 2000\n}"
+				},
+				{
+					"name": "403 Forbidden - Admin Only",
+					"status": "Forbidden",
+					"code": 403,
+					"body": "{\n  \"message\": \"Access Denied: Admin Only\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"message\": \"Server Error, Try Again Later\"\n}"
+				}
+			]
+		},				
 		{
-			"name": "http://localhost:5000/api/admin/users/:id/role",
+			"name": "Update User Role",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{admin_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "PUT",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"role\": \"admin\"\n}"
+				},
 				"url": {
-					"raw": "http://localhost:5000/api/admin/users/:id/role",
+					"raw": "http://localhost:5000/api/admin/users/67c073f08895df1b3e633dc1/role",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -176,29 +327,50 @@
 						"api",
 						"admin",
 						"users",
-						":id",
+						"67c073f08895df1b3e633dc1",
 						"role"
-					],
-					"variable": [
-						{
-							"key": "id",
-							"value": ""
-						}
 					]
-				}
+				},
+				"description": "Allows admin to update a user's role."
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK - Role Updated",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"message\": \"User role updated successfully\"\n}"
+				},
+				{
+					"name": "403 Forbidden - Only Admin Allowed",
+					"status": "Forbidden",
+					"code": 403,
+					"body": "{\n  \"message\": \"Access Denied\"\n}"
+				},
+				{
+					"name": "404 Not Found - User Not Found",
+					"status": "Not Found",
+					"code": 404,
+					"body": "{\n  \"message\": \"User not found\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/transactions/",
+			"name": "Get All Transactions",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:5000/api/transactions/",
+					"raw": "http://localhost:5000/api/transactions",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -206,32 +378,75 @@
 					"port": "5000",
 					"path": [
 						"api",
-						"transactions",
-						""
+						"transactions"
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK - Success",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"transactions\": [\n    {\n      \"_id\": \"67c31d260e8aa6764c7246c1\",\n      \"user\": \"67c074178895df1b3e633dc6\",\n      \"amount\": 200,\n      \"type\": \"expense\",\n      \"category\": \"Food\",\n      \"description\": \"Grocery shopping\",\n      \"date\": \"2025-03-01T18:30:00.000Z\",\n      \"tags\": [],\n      \"createdAt\": \"2025-03-01T14:43:50.480Z\",\n      \"updatedAt\": \"2025-03-01T14:43:50.480Z\",\n      \"__v\": 0\n    }\n  ]\n}",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					]
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Access Denied: No Token Provided\"\n}",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					]
+				},
+				{
+					"name": "403 Forbidden",
+					"status": "Forbidden",
+					"code": 403,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Invalid Token\"\n}",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					]
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/transactions/",
+			"name": "Create Transaction",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"amount\": 400,\r\n  \"type\": \"income\",\r\n  \"category\": \"Food\",\r\n  \"description\": \"Lunch at a home\",\r\n  \"date\": \"2025-03-09\",\r\n  \"tags\": [\"Food\", \"dd\"]\r\n}\r\n",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+					"raw": "{\n  \"amount\": 400,\n  \"type\": \"income\",\n  \"category\": \"Food\",\n  \"description\": \"Lunch at a home\",\n  \"date\": \"2025-03-09\",\n  \"tags\": [\"Food\", \"dd\"]\n}"
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/transactions/",
+					"raw": "http://localhost:5000/api/transactions",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -239,32 +454,63 @@
 					"port": "5000",
 					"path": [
 						"api",
-						"transactions",
-						""
+						"transactions"
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "201 Created",
+					"status": "Created",
+					"code": 201,
+					"body": "{\n  \"success\": true,\n  \"message\": \"Transaction added successfully\",\n  \"transaction\": {\n    \"_id\": \"67c31d260e8aa6764c7246c1\",\n    \"user\": \"67c074178895df1b3e633dc6\",\n    \"amount\": 400,\n    \"type\": \"income\",\n    \"category\": \"Food\",\n    \"description\": \"Lunch at a home\",\n    \"date\": \"2025-03-09T00:00:00.000Z\",\n    \"tags\": [\"Food\", \"dd\"],\n    \"createdAt\": \"2025-03-01T14:43:50.480Z\",\n    \"updatedAt\": \"2025-03-01T14:43:50.480Z\",\n    \"__v\": 0\n  }\n}",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					]
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Access Denied: No Token Provided\"\n}"
+				},
+				{
+					"name": "400 Bad Request",
+					"status": "Bad Request",
+					"code": 400,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Invalid input data\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/transactions/:id",
+			"name": "Update Transaction",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "PUT",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"amount\": 400,\r\n  \"type\": \"income\",\r\n  \"category\": \"Food\",\r\n  \"description\": \"Lunch at a home\",\r\n  \"date\": \"2025-03-09\",\r\n  \"tags\": [\"Food\", \"dd\"]\r\n}\r\n",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+					"raw": "{\n  \"amount\": 500,\n  \"type\": \"expense\",\n  \"category\": \"Bills\",\n  \"description\": \"Electricity bill\",\n  \"date\": \"2025-03-10\",\n  \"tags\": [\"Utilities\", \"Monthly\"]\n}"
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/transactions/:id",
+					"raw": "http://localhost:5000/api/transactions/67bf1e4eba10c4ed0f9ac050",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -273,37 +519,65 @@
 					"path": [
 						"api",
 						"transactions",
-						":id"
-					],
-					"variable": [
-						{
-							"key": "id",
-							"value": ""
-						}
+						"67bf1e4eba10c4ed0f9ac050"
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"message\": \"Transaction updated successfully\",\n  \"transaction\": {\n    \"_id\": \"67bf1e4eba10c4ed0f9ac050\",\n    \"user\": \"67c074178895df1b3e633dc6\",\n    \"amount\": 500,\n    \"type\": \"expense\",\n    \"category\": \"Bills\",\n    \"description\": \"Electricity bill\",\n    \"date\": \"2025-03-10T00:00:00.000Z\",\n    \"tags\": [\"Utilities\", \"Monthly\"],\n    \"updatedAt\": \"2025-03-10T15:30:45.000Z\"\n  }\n}",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					]
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Access Denied: No Token Provided\"\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"status": "Not Found",
+					"code": 404,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Transaction not found\"\n}"
+				},
+				{
+					"name": "400 Bad Request",
+					"status": "Bad Request",
+					"code": 400,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Invalid input data\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/transactions/:id",
+			"name": "Delete Transaction",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "DELETE",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
 					}
-				},
+				],
 				"url": {
-					"raw": "http://localhost:5000/api/transactions/:id",
+					"raw": "http://localhost:5000/api/transactions/67bf1e4eba10c4ed0f9ac050",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -312,26 +586,51 @@
 					"path": [
 						"api",
 						"transactions",
-						":id"
-					],
-					"variable": [
-						{
-							"key": "id",
-							"value": ""
-						}
+						"67bf1e4eba10c4ed0f9ac050"
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"message\": \"Transaction deleted successfully\"\n}"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Access Denied: No Token Provided\"\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"status": "Not Found",
+					"code": 404,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Transaction not found\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/notifications/",
+			"name": "Get All Notifications",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"url": {
 					"raw": "http://localhost:5000/api/notifications/",
 					"protocol": "http",
@@ -341,23 +640,47 @@
 					"port": "5000",
 					"path": [
 						"api",
-						"notifications",
-						""
+						"notifications"
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"notifications\": [\n    {\n      \"_id\": \"67bf1e4eba10c4ed0f9ac050\",\n      \"message\": \"Budget exceeded for Food category\",\n      \"isRead\": false,\n      \"createdAt\": \"2025-03-10T10:10:10.000Z\"\n    },\n    {\n      \"_id\": \"67bf1e4eba10c4ed0f9ac051\",\n      \"message\": \"Transaction missed\",\n      \"isRead\": false,\n      \"createdAt\": \"2025-03-12T12:12:12.000Z\"\n    }\n  ]\n}"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Access Denied: No Token Provided\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/notifications/:id/read",
+			"name": "Mark Notification as Read",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "PUT",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"url": {
-					"raw": "http://localhost:5000/api/notifications/:id/read",
+					"raw": "http://localhost:5000/api/notifications/67c42de54baea5fda4f222cb/read",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -366,27 +689,45 @@
 					"path": [
 						"api",
 						"notifications",
-						":id",
+						"67c42de54baea5fda4f222cb",
 						"read"
-					],
-					"variable": [
-						{
-							"key": "id",
-							"value": ""
-						}
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"message\": \"Notification marked as read\"\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"status": "Not Found",
+					"code": 404,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Notification not found\"\n}"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Access Denied: No Token Provided\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/categories",
+			"name": "Get All Categories",
 			"request": {
 				"auth": {
 					"type": "noauth"
 				},
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"url": {
 					"raw": "http://localhost:5000/api/categories",
 					"protocol": "http",
@@ -400,24 +741,44 @@
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"categories\": [\n    { \"id\": \"1\", \"name\": \"Food\" },\n    { \"id\": \"2\", \"name\": \"Transport\" },\n    { \"id\": \"3\", \"name\": \"Entertainment\" }\n  ]\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/categories",
+			"name": "Create a New Category",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{admin_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+					"raw": "{\n  \"name\": \"Utilities\",\n  \"description\": \"Expenses related to electricity, water, and internet bills\"\n}"
 				},
 				"url": {
 					"raw": "http://localhost:5000/api/categories",
@@ -432,27 +793,53 @@
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "201 Created",
+					"status": "Created",
+					"code": 201,
+					"body": "{\n  \"success\": true,\n  \"message\": \"Category created successfully\",\n  \"category\": {\n    \"id\": \"abc123\",\n    \"name\": \"Utilities\",\n    \"description\": \"Expenses related to electricity, water, and internet bills\"\n  }\n}"
+				},
+				{
+					"name": "400 Bad Request",
+					"status": "Bad Request",
+					"code": 400,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Category name is required\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/categories/:id",
+			"name": "Update Category",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{admin_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "PUT",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+					"raw": "{\n  \"name\": \"Food & Beverages\",\n  \"description\": \"Expenses related to meals, drinks, and dining.\"\n}"
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/categories/:id",
+					"raw": "http://localhost:5000/api/categories/67c05bac96bc6eeea20d28ff",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -461,37 +848,59 @@
 					"path": [
 						"api",
 						"categories",
-						":id"
-					],
-					"variable": [
-						{
-							"key": "id",
-							"value": ""
-						}
+						"67c05bac96bc6eeea20d28ff"
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"message\": \"Category updated successfully\",\n  \"category\": {\n    \"id\": \"67c05bac96bc6eeea20d28ff\",\n    \"name\": \"Food & Beverages\",\n    \"description\": \"Expenses related to meals, drinks, and dining.\"\n  }\n}"
+				},
+				{
+					"name": "400 Bad Request",
+					"status": "Bad Request",
+					"code": 400,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Category name is required\"\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"status": "Not Found",
+					"code": 404,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Category not found\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/categories/:id",
+			"name": "Delete Category",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{admin_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "DELETE",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
 					}
-				},
+				],
 				"url": {
-					"raw": "http://localhost:5000/api/categories/:id",
+					"raw": "http://localhost:5000/api/categories/67c05bac96bc6eeea20d28ff",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -500,26 +909,51 @@
 					"path": [
 						"api",
 						"categories",
-						":id"
-					],
-					"variable": [
-						{
-							"key": "id",
-							"value": ""
-						}
+						"67c05bac96bc6eeea20d28ff"
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"message\": \"Category deleted successfully\"\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"status": "Not Found",
+					"code": 404,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Category not found\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/spending-limits",
+			"name": "Get Spending Limits",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"url": {
 					"raw": "http://localhost:5000/api/spending-limits",
 					"protocol": "http",
@@ -533,16 +967,51 @@
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"spendingLimits\": [\n    {\n      \"_id\": \"67c05bac96bc6eeea20d28ff\",\n      \"category\": \"Food\",\n      \"limit\": 500,\n      \"period\": \"monthly\"\n    }\n  ]\n}"
+				},
+				{
+					"name": "403 Forbidden",
+					"status": "Forbidden",
+					"code": 403,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Unauthorized access. Please log in.\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/spending-limits",
+			"name": "Create Spending Limit",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"category\": \"67c05bac96bc6eeea20d28ff\",\n  \"limitAmount\": 300,\n  \"period\": \"monthly\"\n}"
+				},
 				"url": {
 					"raw": "http://localhost:5000/api/spending-limits",
 					"protocol": "http",
@@ -556,18 +1025,55 @@
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "201 Created",
+					"status": "Created",
+					"code": 201,
+					"body": "{\n  \"success\": true,\n  \"message\": \"Spending limit created successfully\",\n  \"spendingLimit\": {\n    \"_id\": \"67c078018895df1b3e633de1\",\n    \"category\": \"67c05bac96bc6eeea20d28ff\",\n    \"limitAmount\": 300,\n    \"period\": \"monthly\",\n    \"createdAt\": \"2025-03-16T12:00:00Z\"\n  }\n}"
+				},
+				{
+					"name": "400 Bad Request",
+					"status": "Bad Request",
+					"code": 400,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Missing required fields.\"\n}"
+				},
+				{
+					"name": "403 Forbidden",
+					"status": "Forbidden",
+					"code": 403,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Unauthorized access. Please log in.\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/spending-limits/:id",
+			"name": "Delete Spending Limit",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "DELETE",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"url": {
-					"raw": "http://localhost:5000/api/spending-limits/:id",
+					"raw": "http://localhost:5000/api/spending-limits/67c078018895df1b3e633de1",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -576,26 +1082,57 @@
 					"path": [
 						"api",
 						"spending-limits",
-						":id"
-					],
-					"variable": [
-						{
-							"key": "id",
-							"value": ""
-						}
+						"67c078018895df1b3e633de1"
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"message\": \"Spending limit deleted successfully.\"\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"status": "Not Found",
+					"code": 404,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Spending limit not found.\"\n}"
+				},
+				{
+					"name": "403 Forbidden",
+					"status": "Forbidden",
+					"code": 403,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Unauthorized access. Please log in.\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/budgets",
+			"name": "Get All Budgets",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"url": {
 					"raw": "http://localhost:5000/api/budgets",
 					"protocol": "http",
@@ -609,24 +1146,50 @@
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "[\n  {\n    \"_id\": \"67c13d96aa3452422fdfb0b2\",\n    \"user\": \"67c074178895df1b3e633dc6\",\n    \"category\": \"Entertainment\",\n    \"amount\": 200,\n    \"period\": \"weekly\",\n    \"startDate\": \"2025-03-10T00:00:00.000Z\",\n    \"endDate\": \"2025-03-17T00:00:00.000Z\",\n    \"createdAt\": \"2025-03-01T12:10:00.000Z\",\n    \"updatedAt\": \"2025-03-01T12:10:00.000Z\",\n    \"__v\": 0\n  }\n]"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Unauthorized access. Please log in.\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/budgets",
+			"name": "Create Budget",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"category\": \"eee\",\r\n  \"amount\": 500,\r\n  \"period\": \"monthly\",\r\n  \"startDate\": \"2025-03-01\",\r\n  \"endDate\": \"2025-03-10\"\r\n}\r\n",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+					"raw": "{\n  \"category\": \"Entertainment\",\n  \"amount\": 200,\n  \"period\": \"weekly\",\n  \"startDate\": \"2025-03-10\",\n  \"endDate\": \"2025-03-17\"\n}"
 				},
 				"url": {
 					"raw": "http://localhost:5000/api/budgets",
@@ -641,27 +1204,59 @@
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "201 Created",
+					"status": "Created",
+					"code": 201,
+					"body": "{\n  \"_id\": \"67c13d96aa3452422fdfb0b2\",\n  \"user\": \"67c074178895df1b3e633dc6\",\n  \"category\": \"Entertainment\",\n  \"amount\": 200,\n  \"period\": \"weekly\",\n  \"startDate\": \"2025-03-10T00:00:00.000Z\",\n  \"endDate\": \"2025-03-17T00:00:00.000Z\",\n  \"createdAt\": \"2025-03-01T12:10:00.000Z\",\n  \"updatedAt\": \"2025-03-01T12:10:00.000Z\",\n  \"__v\": 0\n}"
+				},
+				{
+					"name": "400 Bad Request",
+					"status": "Bad Request",
+					"code": 400,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Missing required fields.\"\n}"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Unauthorized access. Please log in.\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/budgets/:id",
+			"name": "Update Budget",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "PUT",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"category\": \"eee\",\r\n  \"amount\": 500,\r\n  \"period\": \"monthly\",\r\n  \"startDate\": \"2025-03-01\",\r\n  \"endDate\": \"2025-03-10\"\r\n}\r\n",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+					"raw": "{\n  \"category\": \"Education\",\n  \"amount\": 1200,\n  \"period\": \"monthly\",\n  \"startDate\": \"2025-03-01\",\n  \"endDate\": \"2025-03-30\"\n}"
 				},
 				"url": {
-					"raw": "http://localhost:5000/api/budgets/:id",
+					"raw": "http://localhost:5000/api/budgets/67c46272d77956862fce88b9",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -670,37 +1265,65 @@
 					"path": [
 						"api",
 						"budgets",
-						":id"
-					],
-					"variable": [
-						{
-							"key": "id",
-							"value": ""
-						}
+						"67c46272d77956862fce88b9"
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"_id\": \"67c46272d77956862fce88b9\",\n  \"user\": \"67c074178895df1b3e633dc6\",\n  \"category\": \"Education\",\n  \"amount\": 1200,\n  \"period\": \"monthly\",\n  \"startDate\": \"2025-03-01T00:00:00.000Z\",\n  \"endDate\": \"2025-03-30T00:00:00.000Z\",\n  \"createdAt\": \"2025-03-01T12:10:00.000Z\",\n  \"updatedAt\": \"2025-03-05T12:15:00.000Z\",\n  \"__v\": 0\n}"
+				},
+				{
+					"name": "400 Bad Request",
+					"status": "Bad Request",
+					"code": 400,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Invalid budget ID or missing fields.\"\n}"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Unauthorized access. Please log in.\"\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"status": "Not Found",
+					"code": 404,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Budget not found.\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/budgets/:id",
+			"name": "Delete Budget",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "DELETE",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
 					}
-				},
+				],
 				"url": {
-					"raw": "http://localhost:5000/api/budgets/:id",
+					"raw": "http://localhost:5000/api/budgets/67c46272d77956862fce88b9",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -709,38 +1332,66 @@
 					"path": [
 						"api",
 						"budgets",
-						":id"
-					],
-					"variable": [
-						{
-							"key": "id",
-							"value": ""
-						}
+						"67c46272d77956862fce88b9"
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"message\": \"Budget deleted successfully.\"\n}"
+				},
+				{
+					"name": "400 Bad Request",
+					"status": "Bad Request",
+					"code": 400,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Invalid budget ID.\"\n}"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Unauthorized access. Please log in.\"\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"status": "Not Found",
+					"code": 404,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Budget not found.\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/budgets/track",
+			"name": "Get Budget Tracking",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "GET",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
 					}
-				},
+				],
 				"url": {
 					"raw": "http://localhost:5000/api/budgets/track",
 					"protocol": "http",
@@ -755,16 +1406,47 @@
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"budgetUsage\": [\n    {\n      \"budgetId\": \"67c13d96aa3452422fdfb0b2\",\n      \"category\": \"Entertainment\",\n      \"allocated\": 200,\n      \"spent\": 150,\n      \"remaining\": 50\n    }\n  ]\n}"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Unauthorized access. Please log in.\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/reports",
+			"name": "Get Financial Reports",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"url": {
 					"raw": "http://localhost:5000/api/reports",
 					"protocol": "http",
@@ -778,48 +1460,47 @@
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"data\": {\n    \"totalIncome\": 5000,\n    \"totalExpenses\": 3200,\n    \"netSavings\": 1800,\n    \"categoryBreakdown\": [\n      { \"category\": \"Food\", \"amount\": 600 },\n      { \"category\": \"Transportation\", \"amount\": 400 }\n    ]\n  }\n}"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Unauthorized access. Please log in.\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/goals",
+			"name": "Get User Goals",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:5000/api/goals",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "5000",
-					"path": [
-						"api",
-						"goals"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "http://localhost:5000/api/goals",
-			"request": {
-				"auth": {
-					"type": "noauth"
-				},
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n  \"autoAllocation\": true,\r\n  \"allocationPercentage\": 20,\r\n  \"name\": \"Save for a bike\",\r\n  \"targetAmount\": 1000,\r\n  \"deadline\": \"2025-06-30\",\r\n  \"notes\": \"Need to save up for a new car.\"\r\n}\r\n",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
 					}
-				},
+				],
 				"url": {
 					"raw": "http://localhost:5000/api/goals",
 					"protocol": "http",
@@ -833,18 +1514,107 @@
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"goals\": [\n    {\n      \"_id\": \"67cf79ddf0a75642de98de7e\",\n      \"name\": \"Save for a bike\",\n      \"targetAmount\": 1000,\n      \"currentAmount\": 1122,\n      \"deadline\": \"2025-06-30T00:00:00.000Z\",\n      \"notes\": \"Need to save up for a new car.\",\n      \"autoAllocation\": true,\n      \"allocationPercentage\": 20\n    }\n  ]\n}"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Unauthorized access. Please log in.\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/goals/:id",
+			"name": "Get User Goals",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:5000/api/goals",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"goals"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"goals\": [\n    {\n      \"_id\": \"67cf79ddf0a75642de98de7e\",\n      \"name\": \"Save for a bike\",\n      \"targetAmount\": 1000,\n      \"currentAmount\": 1122,\n      \"deadline\": \"2025-06-30T00:00:00.000Z\",\n      \"notes\": \"Need to save up for a new car.\",\n      \"autoAllocation\": true,\n      \"allocationPercentage\": 20\n    }\n  ]\n}"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Unauthorized access. Please log in.\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
+		{
+			"name": "Update a Goal",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "PUT",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Save for a car\",\n  \"targetAmount\": 2000,\n  \"currentAmount\": 1500,\n  \"deadline\": \"2025-12-31\",\n  \"notes\": \"Need to save up for a new car.\",\n  \"autoAllocation\": true,\n  \"allocationPercentage\": 25\n}"
+				},
 				"url": {
-					"raw": "http://localhost:5000/api/goals/:id",
+					"raw": "http://localhost:5000/api/goals/67cf79ddf0a75642de98de7e",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -853,28 +1623,65 @@
 					"path": [
 						"api",
 						"goals",
-						":id"
+						"67cf79ddf0a75642de98de7e"
 					],
 					"variable": [
 						{
 							"key": "id",
-							"value": ""
+							"value": "67cf79ddf0a75642de98de7e"
 						}
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"message\": \"Goal updated successfully\",\n  \"goal\": {\n    \"_id\": \"67cf79ddf0a75642de98de7e\",\n    \"name\": \"Save for a car\",\n    \"targetAmount\": 2000,\n    \"currentAmount\": 1500,\n    \"deadline\": \"2025-12-31T00:00:00.000Z\",\n    \"notes\": \"Need to save up for a new car.\",\n    \"autoAllocation\": true,\n    \"allocationPercentage\": 25\n  }\n}"
+				},
+				{
+					"name": "400 Bad Request",
+					"status": "Bad Request",
+					"code": 400,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Invalid goal data\"\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"status": "Not Found",
+					"code": 404,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Goal not found\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/goals/:id",
+			"name": "Delete a Goal",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "DELETE",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"url": {
-					"raw": "http://localhost:5000/api/goals/:id",
+					"raw": "http://localhost:5000/api/goals/67cf79ddf0a75642de98de7e",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -883,29 +1690,66 @@
 					"path": [
 						"api",
 						"goals",
-						":id"
+						"67cf79ddf0a75642de98de7e"
 					],
 					"variable": [
 						{
 							"key": "id",
-							"value": ""
+							"value": "67cf79ddf0a75642de98de7e"
 						}
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"message\": \"Goal deleted successfully\"\n}"
+				},
+				{
+					"name": "404 Not Found",
+					"status": "Not Found",
+					"code": 404,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Goal not found\"\n}"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Unauthorized access\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/users/currency",
+			"name": "Update User Preferred Currency",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "PUT",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"preferredCurrency\": \"GBP\"\r\n}",
+					"raw": "{\n    \"preferredCurrency\": \"GBP\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -926,16 +1770,53 @@
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"success\": true,\n  \"message\": \"Preferred currency updated successfully\",\n  \"preferredCurrency\": \"GBP\"\n}"
+				},
+				{
+					"name": "400 Bad Request",
+					"status": "Bad Request",
+					"code": 400,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Invalid currency format\"\n}"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Unauthorized access\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong. Please try again.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/dashboard/user",
+			"name": "Get User Dashboard Data",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{user_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"url": {
 					"raw": "http://localhost:5000/api/dashboard/user",
 					"protocol": "http",
@@ -950,16 +1831,47 @@
 					]
 				}
 			},
-			"response": []
-		},
+			"response": [
+				{
+					"name": "200 OK - Success",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"totalIncome\": 5000,\n  \"totalExpenses\": 3000,\n  \"budgets\": [...],\n  \"goals\": [...],\n  \"recentTransactions\": [...]\n}"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Unauthorized access. Token required.\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong while fetching dashboard data.\"\n}"
+				}
+			]
+		},		
 		{
-			"name": "http://localhost:5000/api/dashboard/admin",
+			"name": "Get Admin Dashboard Data",
 			"request": {
 				"auth": {
-					"type": "noauth"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{admin_token}}",
+							"type": "string"
+						}
+					]
 				},
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
 				"url": {
 					"raw": "http://localhost:5000/api/dashboard/admin",
 					"protocol": "http",
@@ -974,7 +1886,32 @@
 					]
 				}
 			},
-			"response": []
-		}
+			"response": [
+				{
+					"name": "200 OK - Success",
+					"status": "OK",
+					"code": 200,
+					"body": "{\n  \"totalUsers\": 50,\n  \"systemTrends\": {\n    \"totalIncome\": 100000,\n    \"totalExpenses\": 75000,\n    \"topCategories\": [{ \"category\": \"Food\", \"total\": 20000 }]\n  },\n  \"activeBudgets\": [...]\n}"
+				},
+				{
+					"name": "401 Unauthorized",
+					"status": "Unauthorized",
+					"code": 401,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Unauthorized access. Admin token required.\"\n}"
+				},
+				{
+					"name": "403 Forbidden",
+					"status": "Forbidden",
+					"code": 403,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Access denied. Admin role required.\"\n}"
+				},
+				{
+					"name": "500 Internal Server Error",
+					"status": "Internal Server Error",
+					"code": 500,
+					"body": "{\n  \"success\": false,\n  \"message\": \"Something went wrong while fetching dashboard data.\"\n}"
+				}
+			]
+		}		
 	]
 }
