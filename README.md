@@ -1,6 +1,7 @@
 # Personal Finance Tracker API
 
-A comprehensive and secure RESTful API for personal finance management. This system provides a robust platform for users to effectively track income and expenses, set and manage budgets, create and monitor savings goals, generate detailed financial reports with multi-currency support, and access personalized role-based dashboards for complete financial oversight.
+A secure and feature-rich RESTful API designed for personal finance management.
+Built for real-world use, it allows users to track transactions, set budgets, monitor savings goals, and generate detailed financial reports — all with multi-currency support and role-based access.
 
 ## Overview
 
